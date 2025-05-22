@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Credit Card Comparison</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Credit Card Comparison</h1>
+      <p>Find the perfect credit card for your lifestyle and needs</p>
+    </header>
+
+    <div class="search-container">
+      <input
+        type="text"
+        id="search-input"
+        placeholder="Search for cards by name, bank, or benefits..."
+      />
+      <button id="search-btn">Search</button>
+      <div id="search-history-dropdown" class="search-history-dropdown"></div>
+    </div>
+
+    <div id="search-frequency" class="search-frequency">
+      The word "<span id="frequency-word"></span>" appears
+      <span id="frequency-count"></span> times
+    </div>
+
+    <!-- Add this after your search container -->
+    <div class="search-history-panel" id="search-history-panel">
+      <div style="display: flex; align-items: center">
+        <h3 class="search-history-title">Frequently Searched Terms</h3>
+        <button class="clear-history-btn" onclick="clearSearchHistory()">
+          Clear History
+        </button>
+      </div>
+      <div class="search-history-items" id="search-history-items">
+        <!-- History items will be populated here -->
+      </div>
+    </div>
+
+    <div class="filters">
+      <div class="filter-group">
+        <label for="bank-filter">Bank</label>
+        <select id="bank-filter">
+          <option value="">All Banks</option>
+          <option value="CIBC">CIBC</option>
+          <option value="RBC">RBC</option>
+          <option value="TD">TD</option>
+          <option value="BMO">BMO</option>
+          <option value="Scotia">Scotia</option>
+          <!-- Other banks would be added dynamically -->
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="fee-filter">Annual Fee</label>
+        <select id="fee-filter">
+          <option value="">All Fees</option>
+          <option value="0-0">No Annual Fee</option>
+          <option value="1-100">$1 - $100</option>
+          <option value="101-200">$101 - $200</option>
+          <option value="201-100000">$201+</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="interest-filter">Purchase Interest Rate</label>
+        <select id="interest-filter">
+          <option value="">All Rates</option>
+          <option value="0-0">0% - 0%</option>
+          <option value="1-10">1% - 10%</option>
+          <option value="11-20">11% - 20%</option>
+          <option value="20-100">20%+</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="loader">
+      <div class="loader-spinner"></div>
+      <p>Loading cards...</p>
+    </div>
+
+    <div class="cards-container" id="cards-container">
+      <!-- Cards will be populated here dynamically -->
+    </div>
+
+    <!-- Card Detail Modal -->
+    <div class="modal" id="card-modal">
+      <div class="modal-content">
+        <span class="close-modal" id="close-modal">&times;</span>
+        <div class="modal-header">
+          <h2 id="modal-card-title">Card Details</h2>
+        </div>
+        <div id="modal-card-details">
+          <!-- Card details will be populated here -->
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const elements = {
+        searchInput: document.getElementById("search-input"),
+        searchBtn: document.getElementById("search-btn"),
+        clearHistoryBtn: document.getElementById("clear-history-btn"),
+        bankFilter: document.getElementById("bank-filter"),
+        feeFilter: document.getElementById("fee-filter"),
+        interestFilter: document.getElementById("interest-filter"),
+        cardsContainer: document.getElementById("cards-container"),
+        searchHistoryDropdown: document.getElementById(
+          "search-history-dropdown"
+        ),
+        searchFrequency: document.getElementById("search-frequency"),
+        frequencyWord: document.getElementById("frequency-word"),
+        frequencyCount: document.getElementById("frequency-count"),
+        searchHistoryPanel: document.getElementById("search-history-panel"),
+        searchHistoryItems: document.getElementById("search-history-items"),
+        cardModal: document.getElementById("card-modal"),
+        closeModal: document.getElementById("close-modal"),
+        modalCardTitle: document.getElementById("modal-card-title"),
+        modalCardDetails: document.getElementById("modal-card-details"),
+      };
+
+      // Fetch cards from API
+      async function fetchCards() {
+        try {
+          const response = await fetch("/api/creditcards");
+          const cards = await response.json();
+          renderCards(cards);
+        } catch (error) {
+          console.error("Error fetching cards:", error);
+          elements.cardsContainer.innerHTML =
+            "<p>Error loading cards. Please try again later.</p>";
+        }
+      }
+
+      // Function to filter cards based on user input
+      async function filterCards() {
+        const searchTerm = elements.searchInput.value.toLowerCase().trim();
+        const bankFilter = elements.bankFilter.value;
+        const feeFilter = elements.feeFilter.value;
+        const interestFilter = elements.interestFilter.value;
+
+        let url = "/api/creditcards?";
+        if (bankFilter) url += `bankName=${bankFilter}&`;
+        if (feeFilter) {
+          const [minFee, maxFee] = feeFilter.split("-").map(Number);
+          url += `minFee=${minFee}&maxFee=${maxFee}&`;
+        }
+        if (interestFilter) {
+          const [minInterest, maxInterest] = interestFilter
+            .split("-")
+            .map(Number);
+          url += `minInterest=${minInterest}&maxInterest=${maxInterest}&`;
+        }
+        if (searchTerm) url += `search=${searchTerm}&`;
+
+        try {
+          const response = await fetch(url);
+          const cards = await response.json();
+
+          if (cards.length === 0 && searchTerm) {
+            // If no results, fetch spelling suggestions
+            await showSpellingSuggestions(searchTerm);
+          } else {
+            renderCards(cards); // Show "No results" message
+          }
+
+          // await loadSearchHistory();
+        } catch (error) {
+          console.error("Error filtering cards:", error);
+          elements.cardsContainer.innerHTML =
+            "<p>Error applying filters. Please try again.</p>";
+        }
+      }
+
+      async function handleSearch() {
+        const searchTerm = elements.searchInput.value.toLowerCase().trim();
+
+        if (!searchTerm) return; // Skip empty searches
+
+        // Only record search when explicitly triggered
+        try {
+          // (1) Record the search (increments count by 1 on server)
+          await fetch(`/api/creditcards/search-history`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ term: searchTerm }),
+          });
+
+          // (2) Show frequency
+          await showWordFrequency(searchTerm);
+
+          // (3) Apply filters
+          await filterCards();
+
+          // (4) Refresh history panel
+          await loadSearchHistory();
+        } catch (error) {
+          console.error("Search error:", error);
+        }
+      }
+
+      // Show word frequency for search term
+      async function showWordFrequency(term) {
+        try {
+          const response = await fetch(
+            `/api/creditcards/word-frequency?word=${encodeURIComponent(term)}`
+          );
+          const data = await response.json();
+
+          elements.frequencyWord.textContent = data.word;
+          elements.frequencyCount.textContent = data.count;
+          elements.searchFrequency.style.display = "block";
+        } catch (error) {
+          console.error("Error fetching word frequency:", error);
+          elements.searchFrequency.style.display = "none";
+        }
+      }
+
+      // Show spelling suggestions
+      async function showSpellingSuggestions(term) {
+        try {
+          const response = await fetch(
+            `/api/creditcards/spelling-suggestions?word=${term}`
+          );
+          const suggestions = await response.json();
+
+          if (suggestions.length > 0) {
+            elements.cardsContainer.innerHTML = `
+              <div class="spelling-suggestion">
+                <p>No cards found. Did you mean:</p>
+                <ul>
+                  ${suggestions
+                    .map(
+                      (suggestion) => `
+                    <li>
+                      <a href="#" onclick="applySuggestion('${suggestion}')">${suggestion}</a>
+                    </li>
+                  `
+                    )
+                    .join("")}
+                </ul>
+              </div>
+            `;
+          } else {
+            renderCards([]);
+          }
+        } catch (error) {
+          console.error("Error fetching spelling suggestions:", error);
+          renderCards([]);
+        }
+      }
+
+      function applySuggestion(suggestion) {
+        elements.searchInput.value = suggestion;
+        filterCards();
+      }
+
+      // Function to render cards in the UI
+      function renderCards(cards) {
+        elements.cardsContainer.innerHTML = "";
+
+        if (cards.length === 0) {
+          elements.cardsContainer.innerHTML =
+            "<p>No cards match your search criteria. Please try different filters.</p>";
+          return;
+        }
+
+        cards.forEach((card) => {
+          const cardElement = document.createElement("div");
+          cardElement.className = "card";
+          cardElement.innerHTML = `
+            <div class="card-header">
+                <h2>${card.cardTitle}</h2>
+            </div>
+            <div class="card-body">
+                <div class="card-image">
+                    <img src="${card.cardImages}" alt="${card.cardTitle}">
+                </div>
+                <div class="card-detail">
+                    <h3>Annual Fee</h3>
+                    <p>${card.annualFees}</p>
+                </div>
+                <div class="card-detail">
+                    <h3>Interest Rates</h3>
+                    <p><b>Purchase Interest Rate:</b> ${(
+                      card.purchaseInterestRate * 100
+                    ).toFixed(2)}%</p>
+                    <p><b>Cash Interest Rate:</b> ${(
+                      card.cashInterestRate * 100
+                    ).toFixed(2)}%</p>
+                </div>
+                <div class="card-detail">
+                    <h3>Value Proposition</h3>
+                    <p>${card.productValueProp}</p>
+                </div>
+                <div class="card-detail">
+                    <h3>Benefits</h3>
+                    <div class="benefits">
+                        ${card.productBenefits
+                          .split("*")
+                          .map(
+                            (benefit) =>
+                              `<span class="benefit-tag">${benefit.trim()}</span>`
+                          )
+                          .join("")}
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button class="details-btn" data-id="${
+                      card.id
+                    }">View Details</button>
+                </div>
+            </div>
+        `;
+          elements.cardsContainer.appendChild(cardElement);
+
+          cardElement
+            .querySelector(".details-btn")
+            .addEventListener("click", () => showCardDetails(card));
+        });
+      }
+
+      function showCardDetails(card) {
+        // Parse benefits for better display
+        const benefitsArray = card.productBenefits
+          .split("*")
+          .map((benefit) => benefit.trim())
+          .filter((benefit) => benefit !== "");
+
+        elements.modalCardTitle.textContent = card.cardTitle;
+
+        // Populate the modal with card details
+        elements.modalCardDetails.innerHTML = `
+        <div class="card-image" style="text-align: center; margin-bottom: 20px;">
+            <img src="${card.cardImages}" alt="${
+          card.cardTitle
+        }" style="max-width: 250px;">
+        </div>
+        <div class="card-detail">
+            <h3>Bank</h3>
+            <p>${card.bankName}</p>
+        </div>
+        <div class="card-detail">
+            <h3>Annual Fee</h3>
+            <p>${card.annualFees}</p>
+        </div>
+        <div class="card-detail">
+            <h3>Interest Rates</h3>
+            <p><strong>Purchase Interest Rate:</strong> ${(
+              card.purchaseInterestRate * 100
+            ).toFixed(2)}%</p>
+            <p><strong>Cash Interest Rate:</strong> ${(
+              card.cashInterestRate * 100
+            ).toFixed(2)}%</p>
+        </div>
+        <div class="card-detail">
+            <h3>Value Proposition</h3>
+            <p>${card.productValueProp}</p>
+        </div>
+        <div class="card-detail">
+            <h3>Benefits</h3>
+            <ul>
+                ${benefitsArray
+                  .map(
+                    (benefit) =>
+                      `<div class="benefit-tag" style="margin-bottom: 10px;">${benefit}</div>`
+                  )
+                  .join("")}
+            </ul>
+        </div>
+    `;
+
+        // Display the modal
+        elements.cardModal.style.display = "flex";
+      }
+
+      // Function to fetch autocomplete suggestions
+      async function fetchAutocompleteSuggestions(prefix) {
+        try {
+          const response = await fetch(
+            `/api/creditcards/autocomplete?prefix=${prefix}`
+          );
+          const suggestions = await response.json();
+          return suggestions;
+        } catch (error) {
+          console.error("Error fetching autocomplete suggestions:", error);
+          return [];
+        }
+      }
+
+      // Function to display autocomplete suggestions
+      async function displayAutocompleteSuggestions() {
+        const searchTerm = elements.searchInput.value.toLowerCase();
+        elements.searchHistoryDropdown.innerHTML = "";
+
+        if (searchTerm.length > 0) {
+          try {
+            const suggestions = await fetchAutocompleteSuggestions(searchTerm);
+            if (suggestions.length > 0) {
+              suggestions.forEach((suggestion) => {
+                const suggestionItem = document.createElement("div");
+                suggestionItem.textContent = suggestion;
+                suggestionItem.addEventListener("click", async () => {
+                  elements.searchInput.value = suggestion;
+                  await filterCards();
+                  await loadSearchHistory();
+                });
+                elements.searchHistoryDropdown.appendChild(suggestionItem);
+              });
+              elements.searchHistoryDropdown.style.display = "block";
+            } else {
+              elements.searchHistoryDropdown.style.display = "none";
+            }
+          } catch (error) {
+            console.error("Error fetching autocomplete suggestions:", error);
+            elements.searchHistoryDropdown.style.display = "none";
+          }
+        } else {
+          elements.searchHistoryDropdown.style.display = "none";
+        }
+      }
+
+      // Add this to your existing JavaScript
+      async function loadSearchHistory() {
+        try {
+          const response = await fetch(
+            "/api/creditcards/search-history?limit=10"
+          );
+          if (!response.ok) throw new Error("Network response was not ok");
+
+          const history = await response.json();
+          displayServerSearchHistory(history);
+          elements.searchHistoryPanel.style.display = "block";
+        } catch (error) {
+          console.error("Error loading search history:", error);
+          elements.searchHistoryItems.innerHTML =
+            "<p>Unable to load search history</p>";
+        }
+      }
+
+      function displayServerSearchHistory(history) {
+        elements.searchHistoryItems.innerHTML = "";
+
+        if (!history || Object.keys(history).length === 0) {
+          elements.searchHistoryItems.innerHTML =
+            "<p>No search history yet</p>";
+          return;
+        }
+
+        for (const [term, count] of Object.entries(history)) {
+          const item = document.createElement("div");
+          item.className = "search-history-item";
+          item.innerHTML = `
+            ${term}
+            <span class="search-history-count">${count}</span>
+          `;
+          item.addEventListener("click", () => {
+            elements.searchInput.value = term;
+            filterCards();
+          });
+          elements.searchHistoryItems.appendChild(item);
+        }
+      }
+
+      async function clearSearchHistory() {
+        try {
+          await fetch("/api/creditcards/search-history", {
+            method: "DELETE",
+          });
+          await loadSearchHistory();
+        } catch (error) {
+          console.error("Error clearing search history:", error);
+        }
+      }
+
+      // Event listener to hide dropdown when clicking outside
+      document.addEventListener("click", (e) => {
+        const dropdown = document.getElementById("search-history-dropdown");
+        if (e.target.id !== "search-input") {
+          dropdown.style.display = "none";
+        }
+      });
+
+      // Event listener to hide dropdown when clicking outside
+      document.addEventListener("click", (e) => {
+        const dropdown = document.getElementById("search-history-dropdown");
+        if (e.target.id !== "search-input") {
+          dropdown.style.display = "none";
+        }
+      });
+
+      function setupEventListeners() {
+        elements.searchBtn.addEventListener("click", handleSearch);
+        elements.searchInput.addEventListener("keyup", (e) => {
+          if (e.key === "Enter") handleSearch();
+        });
+        [
+          elements.bankFilter,
+          elements.feeFilter,
+          elements.interestFilter,
+        ].forEach((filter) => {
+          filter.addEventListener("change", filterCards);
+        });
+
+        elements.bankFilter.addEventListener("change", filterCards);
+        elements.feeFilter.addEventListener("change", filterCards);
+        elements.interestFilter.addEventListener("change", filterCards);
+
+        elements.searchInput.addEventListener("input", handleSearchInput);
+
+        // Modal interactions
+        elements.closeModal.addEventListener("click", () => {
+          elements.cardModal.style.display = "none";
+        });
+        window.addEventListener("click", (e) => {
+          if (e.target === elements.cardModal) {
+            elements.cardModal.style.display = "none";
+          }
+        });
+
+        elements.clearHistoryBtn.addEventListener("click", async () => {
+          await fetch("/api/creditcards/search-history", { method: "DELETE" });
+          await loadSearchHistory(); // Refresh immediately after clear
+        });
+        document
+          .querySelector(".clear-history-btn")
+          .addEventListener("click", clearSearchHistory);
+      }
+
+      async function handleSearchInput() {
+        await displayAutocompleteSuggestions();
+      }
+
+      // Initial load
+      document.addEventListener("DOMContentLoaded", async () => {
+        await fetchCards();
+        await loadSearchHistory();
+        setupEventListeners();
+      });
+    </script>
+  </body>
+</html>
