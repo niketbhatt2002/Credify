@@ -1,70 +1,120 @@
-# Getting Started with Create React App
+# Credify App
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Credify is a full-stack web application built to showcase secure and efficient user management using modern technologies across frontend, backend, and database layers.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## 🧱 Tech Stack
 
-### `npm start`
+| Layer          | Technology                 |
+|----------------|-----------------------------|
+| Frontend       | React.js (Create React App) |
+| Backend        | Java Spring Boot & Node.js  |
+| Database       | MongoDB (NoSQL)             |
+| Version Control| Git & GitHub                |
+| Deployment     | Localhost (Dev Phase)       |
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+---
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## 🚀 Project Timeline & Setup
 
-### `npm test`
+### 📌 Step 1: Initializing the Frontend
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- Bootstrapped using [Create React App](https://github.com/facebook/create-react-app)
+- UI development with reusable components
+- State management using React Hooks
+- Local testing on [http://localhost:3000](http://localhost:3000)
 
-### `npm run build`
+**Available Scripts:**
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```bash
+npm start          # Start development server
+npm test           # Run test suites
+npm run build      # Build for production
+npm run eject      # (Optional) Eject from CRA
+📌 Step 2: Backend Development
+We implemented two microservices:
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+⚙️ Java Spring Boot
+Initialized using Spring Initializr
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+REST APIs for business logic and user data processing
 
-### `npm run eject`
+Configuration via application.properties
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+Unit testing with JUnit
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Run Backend (Spring Boot):
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+bash
+Copy
+Edit
+./mvnw spring-boot:run
+⚙️ Node.js (Optional Backend)
+Created lightweight APIs with Express.js
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+Token handling and authentication middleware
 
-## Learn More
+Connected to MongoDB using mongoose
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+📌 Step 3: Database Integration
+MongoDB used as the primary database
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+Schema defined via Mongoose models
 
-### Code Splitting
+Data persisted for users and activity logs
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+🔄 Localhost Setup
+To run the project locally:
 
-### Analyzing the Bundle Size
+Clone the repository:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+bash
+Copy
+Edit
+git clone https://github.com/niketbhatt2002/credify.git
+Navigate to frontend and install dependencies:
 
-### Making a Progressive Web App
+bash
+Copy
+Edit
+cd credify/frontend
+npm install
+npm start
+In another terminal, run backend:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+bash
+Copy
+Edit
+cd ../backend
+./mvnw spring-boot:run
+Ensure MongoDB is running locally on the default port (27017).
 
-### Advanced Configuration
+📚 Learn More
+Create React App Documentation
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+Spring Boot Documentation
 
-### Deployment
+MongoDB Documentation
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+🤝 Contributing
+This project is currently being maintained by a solo developer. Contributions are welcome in future versions.
 
-### `npm run build` fails to minify
+🧾 License
+This project is licensed under the MIT License.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+yaml
+Copy
+Edit
+
+---
+
+### ✅ What to Do Next:
+
+1. Replace your current `README.md` with this content.
+2. Then run:
+
+```bash
+git add README.md
+git commit -m "Updated README with full project timeline and stack"
+git push origin main
