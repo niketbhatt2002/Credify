@@ -12,7 +12,7 @@ import java.util.Map;
 /**
  * REST controller for handling credit card-related operations.
  * Provides endpoints for retrieving, filtering, and searching credit cards,
- * as well as managing search history.
+ * as well as managing search history too.
  */
 @RestController
 @RequestMapping("/api/creditcards") // Base URL for all endpoints in this controller
