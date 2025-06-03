@@ -10,7 +10,7 @@ public class CreditCard {
     // =========================================
 
     private String cardTitle;          // Title/name of the credit card
-    private String cardImages;         // Image URLs or paths for the card
+    private String cardImages;         // Image URLs or paths for the card with there bank link.
     private String annualFees;         // Annual fees associated with the card
     private String purchaseInterestRate; // Purchase interest rate
     private String cashInterestRate;   // Cash advance interest rate
