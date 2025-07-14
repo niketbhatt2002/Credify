@@ -1,6 +1,6 @@
 # Credify App
 
-Credify is a full-stack web application built to showcase secure and efficient user management using modern technologies across frontend, backend, and databas layers.
+Credify is a full-stack web application built to showcase secure and efficient user management using modern technologies across frontend, backend, and database layers.
 
 ---
 
