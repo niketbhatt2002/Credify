@@ -22,7 +22,7 @@ Credify is a full-stack web application built to showcase secure and efficient u
 
 - Bootstrapped using [Create React App](https://github.com/facebook/create-react-app)
 - UI development with reusable components
-- State management using React Hooks
+- State management using React Hook
 - Local testing on [http://localhost:3000](http://localhost:3000)
 
 **Available Scripts:**
