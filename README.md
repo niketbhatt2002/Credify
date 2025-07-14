@@ -9,7 +9,7 @@ Credify is a full-stack web application built to showcase secure and efficient u
 | Layer          | Technology                 |
 |----------------|-----------------------------|
 | Frontend       | React.js (Create React App) |
-| Backend        | Java Spring Boot & Node.js  |
+| Backend        | Java Spring Boot & Node.j  |
 | Database       | MongoDB (NoSQL)             |
 | Version Control| Git & GitHub                |
 | Deployment     | Localhost (Dev Phase)       |
